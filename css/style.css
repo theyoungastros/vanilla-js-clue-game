@@ -1,0 +1,236 @@
+/* Global */
+body, html {
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+}
+
+ul {
+    margin: 0 0 0 5px;
+    padding: 0;
+    list-style-position: inside;
+}
+
+p {
+    margin: 0 0 20px;
+}
+
+button.active {
+    border-bottom: 4px solid #555;
+    position: relative;
+    bottom: 10px;
+    margin-bottom: -4px;
+}
+
+.wrapper {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+}
+
+/* Map */
+
+.map {
+    border-collapse: collapse;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.map-tile {
+    border: 2px solid #aaa;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.map-tile:hover {
+    outline: 2px solid rgba(0, 150, 200, 0.5);
+    border-color: #0af;
+}
+
+.map-tile[data-status="closed"] {
+    background: #000;
+}
+
+.map-tile[data-status="begin"] {
+    background: #0d0;
+}
+
+.map-tile[data-status="end"] {
+    background: #d00;
+}
+
+.map-tile[data-status="set-closed"] {
+    background: #8B7A5E;
+}
+
+.map-tile[data-status="set-opened"] {
+    background: #9FD6D2;
+}
+
+.map-tile[data-status="path"] {
+    background: #f0f;
+}
+
+.map-tile[data-lv]:after {
+    font-size: 30px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 50px;
+    text-align: center;
+    display: block;
+    width: 47px;
+    letter-spacing: -2px;
+    color: #999;
+}
+
+.map-tile[data-lv="2"]:after {
+    content: '\2022\2022';
+}
+
+.map-tile[data-lv="3"]:after {
+    content: '\2022\2022\2022';
+}
+
+.map-tile[data-lv="4"]:after {
+    content: '\2022\2022\2022\2022';
+}
+
+
+/* Players */
+
+.player{
+  display: block;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transition: all .3s linear;
+}
+
+
+/* Dice */
+
+/* Dice */
+
+.dice{
+    position:fixed;
+    width: 160px;
+    height: 100px;
+    top: 10px;
+    right: 10px;
+    border:1px solid #000;
+    box-sizing: border-box;
+}
+.die {
+    border-top: 1px solid #f1f1f1;
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    position: relative;
+    margin: 10px;
+    font-size: 6px;
+    display: inline-block;
+    box-shadow: 0px 5px 0 #CCC, 0 6px 3px #444, 0 10px 5px #999;
+    background-image: linear-gradient(top, #fefefe, #f1f1f1 80%);
+    position:absolute;
+}
+#die-1{
+    top: 10px;
+    left: 10px;
+}
+#die-2{
+    top: 10px;
+    left: 75px;
+}
+
+.dot {
+    width: 20%;
+    height: 20%;
+    left: 50%;
+    top: 50%;
+    margin: -10%;
+    background: #345;
+    border-radius: 50%;
+    display: block;
+    position: absolute;
+}
+
+.die.one .dot {
+    box-shadow: 0 .2em 0 #FFF
+}
+.die.two .dot {
+    background: transparent;
+    box-shadow: -2.3em -2.3em 0 #345,
+             2.3em  2.3em 0 #345,
+            -2.3em -2.3em 0 #FFF,
+             2.3em  2.4em 0 #FFF
+}
+.die.three .dot {
+    box-shadow: -2.3em -2.3em 0 #345,
+             2.3em  2.3em 0 #345,
+            -2.3em -2.3em 0 #FFF,
+             2.3em  2.4em 0 #FFF,
+                 0   .2em 0 #FFF
+}
+.die.four .dot {
+    background: transparent;
+        box-shadow: -2.3em -2.3em 0 #345,
+                 2.3em  2.3em 0 #345,
+                -2.3em  2.3em 0 #345,
+                 2.3em -2.3em 0 #345,
+                -2.3em -2.3em 0 #FFF,
+                 2.3em  2.4em 0 #FFF,
+                -2.3em  2.4em 0 #FFF,
+                 2.3em -2.3em 0 #FFF
+}
+.die.five .dot {
+    box-shadow: -2.3em -2.3em 0 #345,
+             2.3em  2.3em 0 #345,
+            -2.3em  2.3em 0 #345,
+             2.3em -2.3em 0 #345,
+            -2.3em -2.2em 0 #FFF,
+             2.3em -2.2em 0 #FFF,
+             2.3em  2.4em 0 #FFF,
+            -2.3em  2.4em 0 #FFF,
+                 0   .2em 0 #FFF
+}
+.die.six .dot {
+    background: transparent;
+    box-shadow: -2.3em -2.3em 0 #345,
+            -2.3em      0 0 #345,
+            -2.3em  2.3em 0 #345,
+             2.3em -2.3em 0 #345,
+             2.3em      0 0 #345,
+             2.3em  2.3em 0 #345,
+            -2.3em -2.1em 0 #FFF,
+            -2.3em   .2em 0 #FFF,
+            -2.3em  2.4em 0 #FFF,
+             2.3em  2.4em 0 #FFF,
+             2.3em   .2em 0 #FFF,
+             2.3em -2.1em 0 #FFF
+}
+
+
+/* Buttons */
+
+#btn-confirm{
+  position: absolute;
+  top: 20px;
+  left: 500px;
+  font-size: 16px;
+}
