@@ -236,6 +236,8 @@ Game.getState = function() {
 
 Game.setState = function(state){
 
+  var player = Player.getActive();
+  var tile = player.currentTile();
 
   switch(state){
 
@@ -256,8 +258,14 @@ Game.setState = function(state){
     break;
 
     case "accusing":
-      // TODO: Setup accusing state
-      Game.setState('turn-over');
+
+      if(!tile.room){
+        Game.setState('turn-over');
+        return;
+      }
+
+      UI.presentMenu('accusing');
+
       return;
     break;
 
@@ -361,6 +369,12 @@ Player.prototype.setPosition = function(x, y) {
 
 }
 
+Player.prototype.currentTile = function(){
+
+  return Tile.get(this.x, this.y);
+
+}
+
 Player.prototype.moveToTile = function(tile, callback){
 
   if(!Game.currentSteps){
@@ -369,6 +383,8 @@ Player.prototype.moveToTile = function(tile, callback){
 
 
   this.incrementSteps(Game.currentSteps.length - 1, Game.currentSteps, function(){
+
+    Player.getActive().setPosition(tile.x, tile.y);
 
     Game.setState("accusing");
 
@@ -380,6 +396,8 @@ Player.prototype.moveToTile = function(tile, callback){
 Player.prototype.incrementSteps = function(i, steps, callback){
 
   var player = this;
+  var finalX = steps[steps.length-1].x;
+  var finalY = steps[steps.length-1].y;
 
   if(i >= 0){
 
@@ -397,6 +415,9 @@ Player.prototype.incrementSteps = function(i, steps, callback){
   }
 
   Game.currentSteps = null;
+
+
+
   callback();
 
 }
@@ -675,6 +696,15 @@ UI.enableElement = function(elementId){
 UI.disableElement = function(elementId){
 
   document.getElementById(elementId).disabled = true;
+
+}
+
+
+UI.presentMenu = function(type){
+
+  if(type == 'accusing'){
+    alert("ACCUSE");
+  }
 
 }
 
