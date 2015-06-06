@@ -237,3 +237,22 @@ button.active {
   left: 500px;
   font-size: 16px;
 }
+
+
+
+/* Dialogs */
+
+#dialogs div{
+  position: fixed;
+  z-index: 10;
+  top: 50%;
+  left:50%;
+  width: 380px;
+  height: 280px;
+  margin-left: -200px;
+  margin-top: -150px;
+  background-color:#ccc;
+  padding: 10px;
+  text-align: center;
+  display: none;
+}

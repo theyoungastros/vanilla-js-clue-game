@@ -42,6 +42,11 @@ Game.roomData = null;
 Game.playerData = null;
 Game.weaponData = null;
 
+Game.answer = {};
+Game.answer.player = null;
+Game.answer.room = null;
+Game.answer.weapon = null;
+
 
 /* Game Setup */
 
@@ -56,6 +61,7 @@ Game.init = function() {
     Game.createWeapons();
     Game.createDialogs();
     Game.positionPlayers();
+    Game.shuffleAndDeal();
     Game.bindEvents();
 
     Game.setState('game-begin');
@@ -94,6 +100,7 @@ Game.cache = function() {
   Game.dom.dialogAccuse.playerSelect = document.getElementById("accuse-person");
   Game.dom.dialogAccuse.roomSelect = document.getElementById("accuse-room");
   Game.dom.dialogAccuse.weaponSelect = document.getElementById("accuse-weapon");
+  Game.dom.dialogAccuse.confirm = document.getElementById("accuse-confirm");
 
 
 }
@@ -218,6 +225,20 @@ Game.createDialogs = function(){
 }
 
 
+Game.shuffleAndDeal = function() {
+
+  Game.answer.player = Game.players[Utils.randomInt(0, Game.players.length - 1)];
+  Game.answer.room = Game.rooms[Utils.randomInt(0, Game.rooms.length - 1)];
+  Game.answer.weapon = Game.weapons[Utils.randomInt(0, Game.weapons.length - 1)];
+
+  //var cards = [];
+
+
+
+
+}
+
+
 /* Events */
 
 Game.bindEvents = function() {
@@ -261,6 +282,31 @@ Game.bindEvents = function() {
       UI.clearPaths();
 
     }
+
+  }
+
+  //dialogs
+
+  Game.dom.dialogAccuse.confirm.onclick = function(){
+
+    Game.dom.dialogAccuse.container.style.display = 'none';
+
+    var playerId = Utils.getSelectedValue(Game.dom.dialogAccuse.playerSelect);
+    var roomId = Utils.getSelectedValue(Game.dom.dialogAccuse.roomSelect);
+    var weaponId = Utils.getSelectedValue(Game.dom.dialogAccuse.weaponSelect);
+
+    var player = Game.players[playerId];
+    var weapon = Game.weapons[weaponId];
+    var room = Game.rooms[roomId];
+
+    Game.setState('responding');
+
+    Game.accuse(player, room, weapon, function(){
+
+      Game.setState('reflecting');
+      Game.setState('turn-over');
+
+    });
 
   }
 
@@ -374,6 +420,26 @@ Game.nextPlayer = function(){
 }
 
 
+Game.accuse = function(player, room, weapon, callback) {
+
+  var activePlayer = Player.getActive();
+
+  var accusation = "{0} in the {1} with the {2}.".format([player.name, room.name, weapon.name]);
+
+  Game.players.map(function(p){
+
+    if(p.id != activePlayer.id){
+      alert("{0}, can you prove {1} wrong?\n({2})".format([p.name, activePlayer.name, accusation]));
+    }
+
+  });
+
+
+  callback();
+
+}
+
+
 /* ------ */
 /* Models */
 /* ------ */
@@ -389,6 +455,8 @@ var Player = function(id, color, name, element, x, y){
   this.element = element;
   this.x = x;
   this.y = y;
+  this.cards = null;
+
 
 }
 
@@ -752,7 +820,10 @@ UI.disableElement = function(elementId){
 UI.presentMenu = function(type){
 
   if(type == 'accusing'){
-    alert("ACCUSE");
+
+    Game.dom.dialogAccuse.container.style.display = 'block';
+
+
   }
 
 }
@@ -841,6 +912,12 @@ Utils.populateSelectbox = function(element, items, placeholder){
   });
 
   element.innerHTML = html;
+
+}
+
+Utils.getSelectedValue = function(element){
+
+  return element.options[element.selectedIndex].value;
 
 }
 
