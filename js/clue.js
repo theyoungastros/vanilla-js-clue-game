@@ -42,7 +42,8 @@ Game.currentSteps = null;
 
 Game.state = 'turn-begin';
 
-Game.boardData = null;
+Game.gridData = null;
+Game.roomData = null;
 
 
 /* Game Setup */
@@ -67,7 +68,8 @@ Game.init = function() {
 Game.loadData = function(callback) {
 
   Utils.loadJson('/js/board.json', function(response){
-    Game.boardData = response;
+    Game.gridData = response.grid;
+    Game.roomData = response.rooms;
     callback();
   });
 
@@ -95,7 +97,7 @@ Game.drawBoard = function() {
   var rows = 0;
   var cols = 0;
 
-  Game.boardData.map(function(row, y){
+  Game.gridData.map(function(row, y){
     rows++;
     cols = 0;
 
@@ -434,22 +436,37 @@ var Tile = function(x, y, element, typeId) {
   this.typeId = parseInt(typeId);
   this.type = "";
   this.walkable = false;
+  this.room = false;
+  this.roomId = null;
+  this.roomName = null;
 
-  switch(this.typeId){
-    case 0:
-      //empty space
-      this.walkable = true;
-      this.type = "open";
-      break;
-    case 1:
-      this.walkable = false;
-      this.type = "wall";
-      break;
-    case 2:
-      this.walkable = true;
-      this.type = "start";
-      break;
+  if(this.typeId < 0){
 
+    this.roomId = (this.typeId * -1) - 1;
+
+    this.walkable = true;
+    this.room = true;
+
+    this.roomName = Game.roomData[this.roomId];
+
+  } else {
+
+    switch(this.typeId){
+      case 0:
+        //empty space
+        this.walkable = true;
+        this.type = "open";
+        break;
+      case 1:
+        this.walkable = false;
+        this.type = "wall";
+        break;
+      case 2:
+        this.walkable = true;
+        this.type = "start";
+        break;
+
+    }
   }
 
 }
