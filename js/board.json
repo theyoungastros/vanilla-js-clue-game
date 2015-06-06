@@ -14,8 +14,8 @@
   [1,1,1,1,1,1,1,1,1,1]
 ],
 "rooms":[
-    "Test",
-    "Test2",
-    "Test3"
+  {"name": "Kitchen"},
+  {"name": "Ballroom"},
+  {"name": "Dining Room"}
   ]
 }

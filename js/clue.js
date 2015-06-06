@@ -36,6 +36,7 @@ Game.players = [];
 Game.activePlayerId = 0;
 
 Game.tiles = [];
+Game.rooms = [];
 
 Game.selectedTile = null;
 Game.currentSteps = null;
@@ -54,6 +55,7 @@ Game.init = function() {
 
     Game.cache();
     Game.drawBoard();
+    Game.createRooms();
     Game.createPlayers();
     Game.positionPlayers();
     Game.bindEvents();
@@ -137,6 +139,16 @@ Game.drawBoard = function() {
     }
   }
 
+
+}
+
+Game.createRooms = function(){
+
+  Game.roomData.map(function(room, i){
+
+    Game.rooms.push(new Room(i, room.name));
+
+  });
 
 }
 
@@ -447,7 +459,11 @@ var Tile = function(x, y, element, typeId) {
     this.walkable = true;
     this.room = true;
 
-    this.roomName = Game.roomData[this.roomId];
+    this.roomName = Game.roomData[this.roomId].name;
+
+    this.element.style.outline = '3px solid #aaa';
+    this.element.title = this.roomName;
+    this.element.innerHTML = this.roomName;
 
   } else {
 
@@ -524,6 +540,16 @@ Tile.prototype.setStatus = function(status) {
 Tile.prototype.getLevel = function() {
 
   return 0;
+
+}
+
+
+/* Room */
+
+var Room = function(id, name){
+
+  this.id = id;
+  this.name = name;
 
 }
 
