@@ -54,8 +54,8 @@ Game.init = function() {
   Game.loadData(function(){
 
     Game.cache();
-    Game.drawBoard();
     Game.createRooms();
+    Game.drawBoard();
     Game.createPlayers();
     Game.positionPlayers();
     Game.bindEvents();
@@ -119,7 +119,6 @@ Game.drawBoard = function() {
     });
 
     html += '</tr>';
-
 
   });
 
@@ -448,22 +447,20 @@ var Tile = function(x, y, element, typeId) {
   this.typeId = parseInt(typeId);
   this.type = "";
   this.walkable = false;
-  this.room = false;
-  this.roomId = null;
-  this.roomName = null;
+  this.room = null;
 
   if(this.typeId < 0){
 
-    this.roomId = (this.typeId * -1) - 1;
+    var roomId = (this.typeId * -1) - 1;
 
     this.walkable = true;
-    this.room = true;
 
-    this.roomName = Game.roomData[this.roomId].name;
+    this.room = Game.rooms[roomId];
+    this.room.tile = this;
 
     this.element.style.outline = '3px solid #aaa';
     this.element.title = this.roomName;
-    this.element.innerHTML = this.roomName;
+    this.element.innerHTML = this.room.name;
 
   } else {
 
@@ -550,7 +547,7 @@ var Room = function(id, name){
 
   this.id = id;
   this.name = name;
-
+  this.tile = null;
 }
 
 
