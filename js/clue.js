@@ -11,8 +11,8 @@ Game.settings = {};
 Game.settings.board = {
   width: 1000,
   height: 1000,
-  rows: 10,
-  cols: 10
+  rows: null,
+  cols: null
 };
 
 Game.settings.tile = {
@@ -27,8 +27,8 @@ Game.settings.token = {
 
 
 Game.settings.players = [
-  {'name': 'Tyler', 'color': 'red', 'position': [0,0]},
-  {'name': 'Bob', 'color': 'blue', 'position': [9,9]},
+  {'name': 'Tyler', 'color': 'red', 'position': [0,2]},
+  {'name': 'Bob', 'color': 'blue', 'position': [9,10]},
 ];
 
 
@@ -42,22 +42,34 @@ Game.currentSteps = null;
 
 Game.state = 'turn-begin';
 
-
-
-
+Game.boardData = null;
 
 
 /* Game Setup */
 
 Game.init = function() {
 
-  Game.cache();
-  Game.drawBoard();
-  Game.createPlayers();
-  Game.positionPlayers();
-  Game.bindEvents();
+  Game.loadData(function(){
 
-  Game.setState('game-begin');
+    Game.cache();
+    Game.drawBoard();
+    Game.createPlayers();
+    Game.positionPlayers();
+    Game.bindEvents();
+
+    Game.setState('game-begin');
+
+  });
+
+
+}
+
+Game.loadData = function(callback) {
+
+  Utils.loadJson('/js/board.json', function(response){
+    Game.boardData = response;
+    callback();
+  });
 
 }
 
@@ -80,38 +92,49 @@ Game.drawBoard = function() {
 
   var html = '<table class="map break alt">';
 
-  for(var y=0; y<Game.settings.board.rows; y++) {
+  var rows = 0;
+  var cols = 0;
 
-    html += '<tr class="map-row" id="map-row-{0}">'.format([y]);
+  Game.boardData.map(function(row, y){
+    rows++;
+    cols = 0;
 
-    for(var x=0; x<Game.settings.board.cols; x++){
+    html += '<tr class="map-row" id="map-row-{0}">'.format([x]);
 
-      var rand = Math.random();
-      var status = (rand > 0.8) ? 'closed' : '';
+    row.map(function(col, x){
+      cols++;
+      var status = '';
+      switch(col){
+        case 1:
+          status = 'closed';
+          break;
+      }
 
-      Game.settings.players.map(function(player){
-        if(player.position[0] == x && player.position[1] == y){
-          status = '';
-        }
-      });
+      html += '<td class="map-tile" id="map-tile-{0}-{1}" data-status="{2}" data-type="{3}"></td>'.format([x, y, status, col]);
 
-      html += '<td class="map-tile" id="map-tile-{0}-{1}" data-status="{2}"></td>'.format([x, y, status]);
-
-    }
+    });
 
     html += '</tr>';
-  }
+
+
+  });
 
   html += '</table>';
 
   Game.dom.board.innerHTML = html;
+  Game.settings.board.rows = rows;
+  Game.settings.board.cols = cols;
+
 
   for(var y=0; y<Game.settings.board.rows; y++) {
     for(var x=0; x<Game.settings.board.cols; x++){
-      var tile = new Tile(x,y, document.getElementById('map-tile-{0}-{1}'.format([x,y])));
+      var element = document.getElementById('map-tile-{0}-{1}'.format([x,y]));
+      var type = element.dataset.type;
+      var tile = new Tile(x,y,element,type);
       Game.tiles.push(tile);
     }
   }
+
 
 }
 
@@ -403,13 +426,34 @@ Player.prototype.pathToTile = function(tile, allowedSteps) {
 
 /* Tile */
 
-var Tile = function(x, y, element) {
+var Tile = function(x, y, element, typeId) {
 
   this.x = x;
   this.y = y;
   this.element = element;
+  this.typeId = parseInt(typeId);
+  this.type = "";
+  this.walkable = false;
+
+  switch(this.typeId){
+    case 0:
+      //empty space
+      this.walkable = true;
+      this.type = "open";
+      break;
+    case 1:
+      this.walkable = false;
+      this.type = "wall";
+      break;
+    case 2:
+      this.walkable = true;
+      this.type = "start";
+      break;
+
+  }
 
 }
+
 
 Tile.get = function(x, y) {
 
