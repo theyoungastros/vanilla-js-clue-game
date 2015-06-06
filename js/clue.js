@@ -10,9 +10,7 @@ Game.settings = {};
 
 Game.settings.board = {
   width: 1000,
-  height: 1000,
-  rows: null,
-  cols: null
+  height: 1000
 };
 
 Game.settings.tile = {
@@ -26,17 +24,13 @@ Game.settings.token = {
 }
 
 
-Game.settings.players = [
-  {'name': 'Tyler', 'color': 'red', 'position': [0,2]},
-  {'name': 'Bob', 'color': 'blue', 'position': [9,10]},
-];
 
-
-Game.players = [];
 Game.activePlayerId = 0;
 
+Game.players = [];
 Game.tiles = [];
 Game.rooms = [];
+Game.weapons = [];
 
 Game.selectedTile = null;
 Game.currentSteps = null;
@@ -45,6 +39,8 @@ Game.state = 'turn-begin';
 
 Game.gridData = null;
 Game.roomData = null;
+Game.playerData = null;
+Game.weaponData = null;
 
 
 /* Game Setup */
@@ -57,6 +53,8 @@ Game.init = function() {
     Game.createRooms();
     Game.drawBoard();
     Game.createPlayers();
+    Game.createWeapons();
+    Game.createDialogs();
     Game.positionPlayers();
     Game.bindEvents();
 
@@ -72,6 +70,8 @@ Game.loadData = function(callback) {
   Utils.loadJson('/js/board.json', function(response){
     Game.gridData = response.grid;
     Game.roomData = response.rooms;
+    Game.playerData = response.players;
+    Game.weaponData = response.weapons;
     callback();
   });
 
@@ -88,6 +88,12 @@ Game.cache = function() {
   Game.dom.die2 = document.getElementById("die-2");
 
   Game.dom.btnConfirm = document.getElementById("btn-confirm");
+
+  Game.dom.dialogAccuse = {};
+  Game.dom.dialogAccuse.container = document.getElementById("dialog-accuse");
+  Game.dom.dialogAccuse.playerSelect = document.getElementById("accuse-person");
+  Game.dom.dialogAccuse.roomSelect = document.getElementById("accuse-room");
+  Game.dom.dialogAccuse.weaponSelect = document.getElementById("accuse-weapon");
 
 
 }
@@ -151,9 +157,19 @@ Game.createRooms = function(){
 
 }
 
+Game.createWeapons = function(){
+
+  Game.weaponData.map(function(weapon, i){
+
+    Game.weapons.push(new Weapon(i, weapon.name));
+
+  });
+
+}
+
 Game.createPlayers = function() {
 
-  Game.settings.players.map(function(p, i){
+  Game.playerData.map(function(p, i){
     var element = document.createElement('div');
 
     element.className = "player";
@@ -174,6 +190,30 @@ Game.positionPlayers = function() {
   Game.players.map(function(player) {
     player.setPosition();
   });
+
+}
+
+Game.createDialogs = function(){
+
+  var roomOptions = [];
+  Game.rooms.map(function(room){
+    roomOptions.push({'key': room.id, 'value': room.name});
+  });
+
+  var playerOptions = [];
+  Game.players.map(function(player){
+    playerOptions.push({'key': player.id, 'value': player.name});
+  });
+
+  var weaponOptions = [];
+  Game.weapons.map(function(weapon){
+    weaponOptions.push({'key': weapon.id, 'value': weapon.name});
+  });
+
+  Utils.populateSelectbox(Game.dom.dialogAccuse.roomSelect, roomOptions, 'Room');
+  Utils.populateSelectbox(Game.dom.dialogAccuse.playerSelect, playerOptions, 'Player');
+  Utils.populateSelectbox(Game.dom.dialogAccuse.weaponSelect, weaponOptions, 'Weapon');
+
 
 }
 
@@ -572,6 +612,15 @@ var Room = function(id, name){
 }
 
 
+/* Weapon */
+
+var Weapon = function(id, name){
+
+  this.id = id;
+  this.name = name;
+}
+
+
 /* Path Finding */
 
 var Pathfinding = Pathfinding || {};
@@ -777,6 +826,22 @@ Utils.shuffleArray = function(array) {
         array[j] = temp;
     }
     return array;
+}
+
+Utils.populateSelectbox = function(element, items, placeholder){
+
+  var html = '';
+  if(placeholder){
+    html += '<option value="none">--{{0}}--</option>'.format([placeholder]);
+  }
+
+  items.map(function(item){
+    html += '<option value="{0}">{1}</option>'.format([item.key, item.value]);
+
+  });
+
+  element.innerHTML = html;
+
 }
 
 

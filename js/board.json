@@ -13,9 +13,17 @@
   [1,0,0,0,0,-3,0,0,0,1],
   [1,1,1,1,1,1,1,1,1,1]
 ],
+"players": [
+  {"name": "Tyler", "color": "red", "position": [0,2]},
+  {"name": "Bob", "color": "blue", "position": [9,10]}
+],
 "rooms":[
   {"name": "Kitchen"},
   {"name": "Ballroom"},
   {"name": "Dining Room"}
-  ]
+],
+"weapons":[
+  {"name": "Candle Stick"},
+  {"name": "Rope"}
+]
 }
