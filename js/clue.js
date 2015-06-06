@@ -231,9 +231,42 @@ Game.shuffleAndDeal = function() {
   Game.answer.room = Game.rooms[Utils.randomInt(0, Game.rooms.length - 1)];
   Game.answer.weapon = Game.weapons[Utils.randomInt(0, Game.weapons.length - 1)];
 
-  //var cards = [];
+  var cards = [];
 
+  var i = 0;
+  Game.players.map(function(player){
+    if(player.id != Game.answer.player.id){
+      cards.push(new Card(i, 'player', player));
+      i++;
+    }
+  });
 
+  Game.rooms.map(function(room){
+    if(room.id != Game.answer.room.id){
+      cards.push(new Card(i, 'room', room));
+      i++;
+    }
+  });
+
+  Game.weapons.map(function(weapon){
+    if(weapon.id != Game.answer.weapon.id){
+      cards.push(new Card(i, 'weapon', weapon));
+      i++;
+    }
+  });
+
+  var shuffledCards = Utils.shuffleArray(cards);
+
+  var j = 0;
+  for(i=0; i<shuffledCards.length; i++){
+    var card = shuffledCards[i];
+    Game.players[j].cards.push(card);
+
+    j++;
+    if(j >= Game.players.length){
+      j = 0;
+    }
+  }
 
 
 }
@@ -455,7 +488,7 @@ var Player = function(id, color, name, element, x, y){
   this.element = element;
   this.x = x;
   this.y = y;
-  this.cards = null;
+  this.cards = [];
 
 
 }
@@ -686,6 +719,16 @@ var Weapon = function(id, name){
 
   this.id = id;
   this.name = name;
+}
+
+/* Card */
+
+var Card = function(id, type, reference) {
+
+  this.id = id;
+  this.type = type;
+  this.reference = reference;
+
 }
 
 
