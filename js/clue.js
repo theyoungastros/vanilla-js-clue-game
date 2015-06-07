@@ -42,6 +42,12 @@ Game.roomData = null;
 Game.playerData = null;
 Game.weaponData = null;
 
+Game.accusation = {};
+Game.accusation.player = null;
+Game.accusation.room = null;
+Game.accusation.weapon = null;
+
+
 Game.answer = {};
 Game.answer.player = null;
 Game.answer.room = null;
@@ -101,6 +107,9 @@ Game.cache = function() {
   Game.dom.dialogAccuse.roomSelect = document.getElementById("accuse-room");
   Game.dom.dialogAccuse.weaponSelect = document.getElementById("accuse-weapon");
   Game.dom.dialogAccuse.confirm = document.getElementById("accuse-confirm");
+
+  Game.dom.dialogRespond = {};
+  Game.dom.dialogRespond.container = document.getElementById("dialog-respond");
 
 
 }
@@ -186,6 +195,8 @@ Game.createPlayers = function() {
     Game.dom.board.appendChild(element);
 
     var player = new Player(i, p.color, p.name, element, p.position[0], p.position[1]);
+
+
     Game.players.push(player);
 
   });
@@ -239,6 +250,11 @@ Game.shuffleAndDeal = function() {
       cards.push(new Card(i, 'player', player));
       i++;
     }
+
+    Game.players.map(function(p){
+      p.guessablePlayers.push(player);
+    });
+
   });
 
   Game.rooms.map(function(room){
@@ -246,6 +262,10 @@ Game.shuffleAndDeal = function() {
       cards.push(new Card(i, 'room', room));
       i++;
     }
+
+    Game.players.map(function(p){
+      p.guessableRooms.push(room);
+    });
   });
 
   Game.weapons.map(function(weapon){
@@ -253,6 +273,10 @@ Game.shuffleAndDeal = function() {
       cards.push(new Card(i, 'weapon', weapon));
       i++;
     }
+
+    Game.players.map(function(p){
+      p.guessableWeapons.push(weapon);
+    });
   });
 
   var shuffledCards = Utils.shuffleArray(cards);
@@ -260,7 +284,9 @@ Game.shuffleAndDeal = function() {
   var j = 0;
   for(i=0; i<shuffledCards.length; i++){
     var card = shuffledCards[i];
-    Game.players[j].cards.push(card);
+
+    Game.players[j].pickupCard(card);
+
 
     j++;
     if(j >= Game.players.length){
@@ -383,7 +409,7 @@ Game.setState = function(state){
         return;
       }
 
-      UI.presentMenu('accusing');
+      UI.showDialog('accusing');
 
       return;
     break;
@@ -455,6 +481,10 @@ Game.nextPlayer = function(){
 
 Game.accuse = function(player, room, weapon, callback) {
 
+  Game.accusation.player = player;
+  Game.accusation.room = room;
+  Game.accusation.weapon = weapon;
+
   var activePlayer = Player.getActive();
 
   var accusation = "{0} in the {1} with the {2}.".format([player.name, room.name, weapon.name]);
@@ -462,13 +492,54 @@ Game.accuse = function(player, room, weapon, callback) {
   Game.players.map(function(p){
 
     if(p.id != activePlayer.id){
-      alert("{0}, can you prove {1} wrong?\n({2})".format([p.name, activePlayer.name, accusation]));
+      var title = "{0}, can you prove {1} wrong?<br />({2})".format([p.name, activePlayer.name, accusation]);
+
+      UI.showDialog('responding', title,  p);
+
+
     }
 
   });
 
 
   callback();
+
+}
+
+
+Game.chooseResponse = function(player, type, object){
+
+  var errors = [];
+
+  switch(type){
+    case "none":
+      // TODO::
+      break;
+    case "player":
+      if(Game.accusation.player != object.id){
+        errors.push("Not a valid choice for player");
+      }
+      break;
+    case "room":
+      if(Game.accusation.room != object.id){
+        errors.push("Not a valid choice for room");
+      }
+      break;
+    case "weapon":
+      if(Game.accusation.weapon != object.id){
+        errors.push("Not a valid choice for weapon");
+      }
+      break;
+  }
+
+
+  if(errors.length > 0){
+    alert(errors.join('\n'));
+    return false;
+  }
+
+  Player.getActive().showCard(type, object);
+
 
 }
 
@@ -488,7 +559,12 @@ var Player = function(id, color, name, element, x, y){
   this.element = element;
   this.x = x;
   this.y = y;
+
   this.cards = [];
+
+  this.guessablePlayers = []
+  this.guessableRooms = []
+  this.guessableWeapons = []
 
 
 }
@@ -598,6 +674,28 @@ Player.prototype.pathToTile = function(tile, allowedSteps) {
 
 }
 
+Player.prototype.pickupCard = function(card){
+  this.cards.push(card);
+
+  this.showCard(card.type, card.reference);
+}
+
+
+Player.prototype.showCard = function(type, object){
+
+  switch(type){
+    case "player":
+      this.guessablePlayers = this.guessablePlayers.remove(object.id);
+    break;
+    case "room":
+      this.guessableRooms = this.guessableRooms.remove(object.id);
+    break;
+    case "weapon":
+      this.guessableWeapons = this.guessableWeapons.remove(object.id);
+    break;
+  }
+
+}
 
 /* Tile */
 
@@ -860,12 +958,59 @@ UI.disableElement = function(elementId){
 }
 
 
-UI.presentMenu = function(type){
+UI.showDialog = function(type, title, player){
+
 
   if(type == 'accusing'){
 
     Game.dom.dialogAccuse.container.style.display = 'block';
 
+  } else if (type == 'responding'){
+
+    var html = '';
+    if(title){
+      html += '<h3>{0}</h3>'.format([title]);
+    }
+
+    html += '<p>';
+
+    player.cards.map(function(card){
+
+      html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format([card.type, card.reference.id, card.reference.name]);
+
+    });
+
+    html += '</p>';
+
+    Game.dom.dialogRespond.container.innerHTML = html;
+
+    var cardElements = document.getElementsByClassName('card');
+    console.log(cardElements)
+
+
+    for(i=0; i<cardElements.length; i++){
+
+      var element = cardElements[i];
+      element.addEventListener('click', function(event){
+
+        var type = event.target.dataset.type;
+        var id = parseInt(event.target.dataset.id);
+        switch(type){
+          case "player":
+            Game.chooseResponse(player, "player", Game.players[id]);
+            break;
+          case "room":
+            Game.chooseResponse(player, "room", Game.rooms[id]);
+            break;
+          case "weapon":
+            Game.chooseResponse(player, "weapon", Game.weapons[id]);
+            break;
+        }
+
+      });
+    }
+
+    Game.dom.dialogRespond.container.style.display = 'block';
 
   }
 

@@ -242,17 +242,36 @@ button.active {
 
 /* Dialogs */
 
-#dialogs div{
+#dialogs > div{
   position: fixed;
   z-index: 10;
   top: 50%;
   left:50%;
-  width: 380px;
+  width: 480px;
   height: 280px;
-  margin-left: -200px;
+  margin-left: -250px;
   margin-top: -150px;
   background-color:#ccc;
   padding: 10px;
   text-align: center;
   display: none;
+}
+
+
+#dialogs div .card{
+
+  position: relative;
+  width: 100px;
+  height: 100px;
+  font-size: 12px;
+  text-align: center;
+  line-height: 100px;
+  float: left;
+  background:#fff;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 3px;
+  margin: 2px;
+  cursor: pointer;
+
 }
