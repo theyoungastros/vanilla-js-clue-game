@@ -23,6 +23,9 @@ Game.settings.token = {
   height: 17
 }
 
+Game.settings.debug = {
+  playerLimit: 2
+};
 
 
 Game.activePlayerId = 0;
@@ -186,6 +189,11 @@ Game.createWeapons = function(){
 Game.createPlayers = function() {
 
   Game.playerData.map(function(p, i){
+
+    if(Game.settings.debug.playerLimit && i >= Game.settings.debug.playerLimit){
+      return;
+    }
+
     var element = document.createElement('div');
 
     element.className = "player";
@@ -510,23 +518,40 @@ Game.accuse = function(player, room, weapon, callback) {
 Game.chooseResponse = function(player, type, object){
 
   var errors = [];
+  var possibleCards = [];
+
+  player.cards.map(function(card){
+    if(card.reference.id == Game.accusation[card.type].id){
+      possibleCards.push(card);
+    }
+  });
+
+  console.log(possibleCards);
 
   switch(type){
     case "none":
-      // TODO::
+      if(possibleCards.length > 1){
+        alert("You must select one of the following: {0}.".format([possibleCards.join()]));
+        return false;
+      } else if(possibleCards.length == 1){
+        alert("You must select {0}.".format([possibleCards[0]]));
+        return false;
+      }
+      alert("Could not prove wrong.");
+      return true;
       break;
     case "player":
-      if(Game.accusation.player != object.id){
+      if(Game.accusation.player.id != object.id){
         errors.push("Not a valid choice for player");
       }
       break;
     case "room":
-      if(Game.accusation.room != object.id){
+      if(Game.accusation.room.id != object.id){
         errors.push("Not a valid choice for room");
       }
       break;
     case "weapon":
-      if(Game.accusation.weapon != object.id){
+      if(Game.accusation.weapon.id != object.id){
         errors.push("Not a valid choice for weapon");
       }
       break;
@@ -538,7 +563,16 @@ Game.chooseResponse = function(player, type, object){
     return false;
   }
 
-  Player.getActive().showCard(type, object);
+
+  if(type && object){
+
+    alert("{0} shows card secretly to {1}".format([player.name, Player.getActive().name]));
+    Player.getActive().showCard(type, object);
+    return true;
+
+  }
+
+  return false;
 
 
 }
@@ -980,12 +1014,15 @@ UI.showDialog = function(type, title, player){
 
     });
 
+    html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format(["none", null, "--None--"]);
+
+
+
     html += '</p>';
 
     Game.dom.dialogRespond.container.innerHTML = html;
 
     var cardElements = document.getElementsByClassName('card');
-
 
     for(i=0; i<cardElements.length; i++){
 
@@ -995,6 +1032,9 @@ UI.showDialog = function(type, title, player){
         var type = event.target.dataset.type;
         var id = parseInt(event.target.dataset.id);
         switch(type){
+          case "none":
+            Game.chooseResponse(player, "none", null);
+            break;
           case "player":
             Game.chooseResponse(player, "player", Game.players[id]);
             break;
