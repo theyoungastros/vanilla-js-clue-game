@@ -52,13 +52,15 @@ button.active {
     border: 2px solid #aaa;
     width: 40px;
     height: 40px;
+    max-width: 40px;
     margin: 0;
     padding: 0;
     cursor: pointer;
     position: relative;
     font-size: 8px;
     text-align: center;
-    table-layout:fixed;
+    table-layout:fixed !important;
+    word-wrap: break-word
 }
 
 .map-tile:hover {
@@ -121,9 +123,24 @@ button.active {
 .player{
   display: block;
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   transition: all .3s linear;
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: 2px 2px 4px rgba(0,0,0,.2);
+}
+
+
+.player::after{
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border-bottom-right-radius: 200px 403px;
+  /* This adds the nice overlay. */
+  background: -webkit-linear-gradient(top, rgba(255,255,255,0.60) 0%,rgba(255,255,255,0.05) 100%);
 }
 
 
@@ -233,8 +250,8 @@ button.active {
 
 #btn-confirm{
   position: absolute;
-  top: 20px;
-  left: 500px;
+  top: 10px;
+  right: 180px;
   font-size: 16px;
 }
 

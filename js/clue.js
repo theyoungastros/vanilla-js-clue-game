@@ -19,8 +19,8 @@ Game.settings.tile = {
 }
 
 Game.settings.token = {
-  width: 20,
-  height: 20
+  width: 17,
+  height: 17
 }
 
 
@@ -985,7 +985,6 @@ UI.showDialog = function(type, title, player){
     Game.dom.dialogRespond.container.innerHTML = html;
 
     var cardElements = document.getElementsByClassName('card');
-    console.log(cardElements)
 
 
     for(i=0; i<cardElements.length; i++){
