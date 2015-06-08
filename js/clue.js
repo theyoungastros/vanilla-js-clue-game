@@ -29,6 +29,7 @@ Game.settings.debug = {
 
 
 Game.activePlayerId = 0;
+Game.respondingPlayerId = 0;
 
 Game.players = [];
 Game.tiles = [];
@@ -50,12 +51,13 @@ Game.accusation.player = null;
 Game.accusation.room = null;
 Game.accusation.weapon = null;
 
-
 Game.answer = {};
 Game.answer.player = null;
 Game.answer.room = null;
 Game.answer.weapon = null;
 
+
+Game.handShowing = false;
 
 /* Game Setup */
 
@@ -103,6 +105,7 @@ Game.cache = function() {
   Game.dom.die2 = document.getElementById("die-2");
 
   Game.dom.btnConfirm = document.getElementById("btn-confirm");
+  Game.dom.btnShowHand = document.getElementById("btn-show-hand");
 
   Game.dom.dialogAccuse = {};
   Game.dom.dialogAccuse.container = document.getElementById("dialog-accuse");
@@ -114,6 +117,9 @@ Game.cache = function() {
   Game.dom.dialogRespond = {};
   Game.dom.dialogRespond.container = document.getElementById("dialog-respond");
 
+
+  Game.dom.memoPad = document.getElementById('memo-pad');
+  Game.dom.playerHand = document.getElementById('player-hand');
 
 }
 
@@ -352,6 +358,18 @@ Game.bindEvents = function() {
 
   }
 
+  Game.dom.btnShowHand.onclick = function() {
+
+    if(!Game.handShowing){
+      Game.showMemopad();
+      Game.showCards();
+    } else {
+      Game.hideMemopad();
+      Game.hideCards();
+    }
+
+  }
+
   //dialogs
 
   Game.dom.dialogAccuse.confirm.onclick = function(){
@@ -368,12 +386,7 @@ Game.bindEvents = function() {
 
     Game.setState('responding');
 
-    Game.accuse(player, room, weapon, function(){
-
-      Game.setState('reflecting');
-      Game.setState('turn-over');
-
-    });
+    Game.accuse(player, room, weapon);
 
   }
 
@@ -417,7 +430,7 @@ Game.setState = function(state){
         return;
       }
 
-      UI.showDialog('accusing');
+      Game.showAccuseDialog();
 
       return;
     break;
@@ -426,6 +439,7 @@ Game.setState = function(state){
     break;
 
     case "reflecting":
+      Game.showMemopad();
     break;
 
     case "turn-over":
@@ -487,6 +501,11 @@ Game.nextPlayer = function(){
 }
 
 
+Game.showAccuseDialog = function(){
+  Game.dom.dialogAccuse.container.style.display = 'block';
+}
+
+
 Game.accuse = function(player, room, weapon, callback) {
 
   Game.accusation.player = player;
@@ -497,22 +516,100 @@ Game.accuse = function(player, room, weapon, callback) {
 
   var accusation = "{0} in the {1} with the {2}.".format([player.name, room.name, weapon.name]);
 
-  Game.players.map(function(p){
+  Game.rotateAccusations(activePlayer.id + 1);
 
-    if(p.id != activePlayer.id){
-      var title = "{0}, can you prove {1} wrong?<br />({2})".format([p.name, activePlayer.name, accusation]);
+  // Game.respondingPlayerId = Game.activePlayerId + 1;
+  // if(Game.respondingPlayerId >= Game.players.length){
+  //   Game.respondingPlayerId = 0;
+  // }
+  //
+  //
+  //
+  // Game.players.map(function(p){
+  //
+  //   if(p.id != activePlayer.id){
+  //     var title = "{0}, can you prove {1} wrong?<br />({2})".format([p.name, activePlayer.name, accusation]);
+  //
+  //     UI.showDialog('responding', title,  p);
+  //     Game.showResponses(title, p);
+  //
+  //
+  //   }
+  //
+  // });
+  //
+  //
+  // callback();
 
-      UI.showDialog('responding', title,  p);
+}
 
+Game.rotateAccusations = function(playerId){
 
-    }
+  if(playerId >= Game.players.length){
+    playerId = 0;
+  }
+
+  if(playerId == Player.getActive().id){
+    alert("No one could prove the accusation wrong...");
+    Game.setState('reflecting');
+    return;
+  }
+
+  var player = Player.get(playerId);
+  var accusation = "{0} in the {1} with the {2}.".format([Game.accusation.player.name, Game.accusation.room.name, Game.accusation.weapon.name]);
+  var title = "{0}, can you prove {1} wrong?<br />({2})".format([player.name, Player.getActive().name, accusation]);
+
+  var html = '';
+  if(title){
+    html += '<h3>{0}</h3>'.format([title]);
+  }
+
+  html += '<p>';
+
+  player.cards.map(function(card){
+
+    html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format([card.type, card.reference.id, card.reference.name]);
 
   });
 
+  html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format(["none", null, "--None--"]);
 
-  callback();
+  html += '</p>';
+
+  Game.dom.dialogRespond.container.innerHTML = html;
+
+  var cardElements = document.getElementsByClassName('card');
+
+  for(i=0; i<cardElements.length; i++){
+
+    var element = cardElements[i];
+    element.addEventListener('click', function(event){
+
+      var type = event.target.dataset.type;
+      var id = parseInt(event.target.dataset.id);
+      switch(type){
+        case "none":
+          Game.chooseResponse(player, "none", null);
+          break;
+        case "player":
+          Game.chooseResponse(player, "player", Game.players[id]);
+          break;
+        case "room":
+          Game.chooseResponse(player, "room", Game.rooms[id]);
+          break;
+        case "weapon":
+          Game.chooseResponse(player, "weapon", Game.weapons[id]);
+          break;
+      }
+
+    });
+  }
+
+  Game.dom.dialogRespond.container.style.display = 'block';
 
 }
+
+
 
 
 Game.chooseResponse = function(player, type, object){
@@ -526,18 +623,17 @@ Game.chooseResponse = function(player, type, object){
     }
   });
 
-  console.log(possibleCards);
-
   switch(type){
     case "none":
       if(possibleCards.length > 1){
         alert("You must select one of the following: {0}.".format([possibleCards.join()]));
         return false;
       } else if(possibleCards.length == 1){
-        alert("You must select {0}.".format([possibleCards[0]]));
+        alert("You must select {0}.".format([possibleCards[0].name]));
         return false;
       }
       alert("Could not prove wrong.");
+      Game.rotateAccusations(player.id + 1);
       return true;
       break;
     case "player":
@@ -566,8 +662,11 @@ Game.chooseResponse = function(player, type, object){
 
   if(type && object){
 
+    Game.dom.dialogRespond.container.style.display = 'none';
     alert("{0} shows card secretly to {1}".format([player.name, Player.getActive().name]));
+    alert("You are shown a {0} card: {1}".format([type, object.name]))
     Player.getActive().showCard(type, object);
+    Game.setState('reflecting');
     return true;
 
   }
@@ -575,6 +674,132 @@ Game.chooseResponse = function(player, type, object){
   return false;
 
 
+}
+
+
+Game.showMemopad = function() {
+
+  var html = '';
+
+  html += '<h4>Suspects</h4>';
+  html += '<table>';
+
+  Game.players.map(function(player){
+    var checked = Player.getActive().innocentPlayers.contains(player.id) ? 'checked="checked"' : '';
+    html += '<tr><td>{0}</td><td width="10%"><input type="checkbox" data-type="player" data-id="{1}" class="memo-pad-checkbox" {2} /></td></tr>'.format([player.name, player.id, checked]);
+  });
+
+  html += '</table>';
+
+  html += '<h4>Rooms</h4>';
+  html += '<table>';
+
+  Game.rooms.map(function(room){
+    var checked = Player.getActive().innocentRooms.contains(room.id) ? 'checked="checked"' : '';
+    html += '<tr><td>{0}</td><td width="10%"><input type="checkbox" data-type="room" data-id="{1}" class="memo-pad-checkbox" {2} /></td></tr>'.format([room.name, room.id, checked]);
+  });
+
+  html += '</table>';
+
+  html += '<h4>Weapons</h4>';
+  html += '<table>';
+
+  Game.weapons.map(function(weapon){
+    var checked = Player.getActive().innocentWeapons.contains(weapon.id) ? 'checked="checked"' : '';
+    html += '<tr><td>{0}</td><td width="10%"><input type="checkbox" data-type="weapon" data-id="{1}" class="memo-pad-checkbox" {2} /></td></tr>'.format([weapon.name, weapon.id, checked]);
+  });
+
+  html += '</table>';
+
+  html += '<p style="text-align:right; padding-top:5px;"><button id="close-memo-pad">Close</button></p>';
+
+
+
+  Game.dom.memoPad.innerHTML = html;
+
+  document.getElementById("close-memo-pad").addEventListener('click', function(){
+
+    Game.hideMemopad();
+
+  });
+
+
+  Game.dom.memoPad.style.display = 'block';
+
+  Game.dom.btnShowHand.value = "Hide Hand";
+  Game.handShowing = true;
+
+
+}
+
+Game.hideMemopad = function() {
+
+  var player = Player.getActive();
+  player.innocentPlayers = [];
+  player.innocentRooms = [];
+  player.innocentWeapons = [];
+
+  var checkboxes = document.getElementsByClassName('memo-pad-checkbox');
+
+  for(i=0; i<checkboxes.length; i++){
+    var checkbox = checkboxes[i];
+
+    if(checkbox.checked) {
+      var type = checkbox.dataset.type;
+      var id = parseInt(checkbox.dataset.id);
+      switch(type){
+        case "player":
+          player.innocentPlayers.push(id);
+        break;
+        case "room":
+          player.innocentRooms.push(id);
+        break;
+        case "weapon":
+          player.innocentWeapons.push(id);
+        break;
+      }
+
+    }
+  }
+
+  Game.dom.memoPad.style.display = 'none';
+  Game.dom.playerHand.style.display = 'none';
+
+  if(Game.getState() == 'reflecting') {
+    Game.setState('turn-over');
+  }
+
+  Game.dom.btnShowHand.value = "Show Hand";
+  Game.handShowing = false;
+
+}
+
+
+Game.showCards = function() {
+
+  var player = Player.getActive();
+
+  var html = '<h4>Your Cards</h4>';
+
+  player.cards.map(function(card){
+    html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format([card.type, card.reference.id, card.reference.name]);
+  });
+
+  Game.dom.playerHand.innerHTML = html;
+
+
+  Game.dom.playerHand.style.display = 'block';
+
+  Game.dom.btnShowHand.value = "Hide Hand";
+  Game.handShowing = true;
+
+}
+
+Game.hideCards = function() {
+  Game.dom.playerHand.style.display = 'none';
+
+  Game.dom.btnShowHand.value = "Show Hand";
+  Game.handShowing = false;
 }
 
 
@@ -596,11 +821,18 @@ var Player = function(id, color, name, element, x, y){
 
   this.cards = [];
 
-  this.guessablePlayers = []
-  this.guessableRooms = []
-  this.guessableWeapons = []
+  this.guessablePlayers = [];
+  this.guessableRooms = [];
+  this.guessableWeapons = [];
 
+  this.innocentPlayers = [];
+  this.innocentRooms = [];
+  this.innocentWeapons = [];
 
+}
+
+Player.get = function(id){
+  return Game.players[id];
 }
 
 Player.getActive = function(){
@@ -992,68 +1224,20 @@ UI.disableElement = function(elementId){
 }
 
 
-UI.showDialog = function(type, title, player){
-
-
-  if(type == 'accusing'){
-
-    Game.dom.dialogAccuse.container.style.display = 'block';
-
-  } else if (type == 'responding'){
-
-    var html = '';
-    if(title){
-      html += '<h3>{0}</h3>'.format([title]);
-    }
-
-    html += '<p>';
-
-    player.cards.map(function(card){
-
-      html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format([card.type, card.reference.id, card.reference.name]);
-
-    });
-
-    html += '<div class="card" data-type="{0}" data-id="{1}">{2}</div>'.format(["none", null, "--None--"]);
-
-
-
-    html += '</p>';
-
-    Game.dom.dialogRespond.container.innerHTML = html;
-
-    var cardElements = document.getElementsByClassName('card');
-
-    for(i=0; i<cardElements.length; i++){
-
-      var element = cardElements[i];
-      element.addEventListener('click', function(event){
-
-        var type = event.target.dataset.type;
-        var id = parseInt(event.target.dataset.id);
-        switch(type){
-          case "none":
-            Game.chooseResponse(player, "none", null);
-            break;
-          case "player":
-            Game.chooseResponse(player, "player", Game.players[id]);
-            break;
-          case "room":
-            Game.chooseResponse(player, "room", Game.rooms[id]);
-            break;
-          case "weapon":
-            Game.chooseResponse(player, "weapon", Game.weapons[id]);
-            break;
-        }
-
-      });
-    }
-
-    Game.dom.dialogRespond.container.style.display = 'block';
-
-  }
-
-}
+// UI.showDialog = function(type, title, player){
+//
+//
+//   if(type == 'accusing'){
+//
+//     Game.dom.dialogAccuse.container.style.display = 'block';
+//
+//   } else if (type == 'responding'){
+//
+//
+//
+//   }
+//
+// }
 
 
 /* --------- */

@@ -255,6 +255,13 @@ button.active {
   font-size: 16px;
 }
 
+#btn-show-hand{
+  position: absolute;
+  top: 34px;
+  right: 180px;
+  font-size: 16px;
+}
+
 
 
 /* Dialogs */
@@ -275,7 +282,7 @@ button.active {
 }
 
 
-#dialogs div .card{
+.card{
 
   position: relative;
   width: 100px;
@@ -290,5 +297,49 @@ button.active {
   border-radius: 3px;
   margin: 2px;
   cursor: pointer;
+
+}
+
+
+
+
+/* Memo Pad */
+
+#memo-pad{
+  position: fixed;
+  padding: 10px;
+  width: 280px;
+  top: 50px;
+  left: 50%;
+  margin-left: -150px;
+  background-color: #fff;
+  border: 1px solid #000;
+  display: none;
+}
+
+#memo-pad table{
+  width: 100%;
+}
+
+#memo-pad table tr td:first-child{
+  width: 90%;
+}
+
+#memo-pad table tr td{
+    border-bottom: 1px dotted #ccc;
+    margin: 0;
+    padding: 0;
+}
+
+#player-hand{
+  display: none;
+  position: fixed;
+  padding: 10px;
+  width: 215px;
+  left: 50%;
+  margin-left: 160px;
+  border: 1px solid;
+  top: 50px;
+  background: #fff;
 
 }
